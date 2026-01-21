@@ -1,8 +1,6 @@
 import { Gamepad2 } from "lucide-react";
-
 const Navbar = () => {
-  return (
-    <nav className="w-full py-4 px-6 border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50">
+  return <nav className="w-full py-4 px-6 border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-glow">
@@ -18,15 +16,9 @@ const Navbar = () => {
           <a href="#" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Leaderboard
           </a>
-          <a href="#" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-            Teams
-          </a>
-          <a href="#" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-            Matches
-          </a>
-          <a href="#" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-            Stats
-          </a>
+          
+          
+          
         </div>
         
         <div className="flex items-center gap-3">
@@ -37,8 +29,6 @@ const Navbar = () => {
           <span className="text-sm font-medium text-accent">LIVE</span>
         </div>
       </div>
-    </nav>
-  );
+    </nav>;
 };
-
 export default Navbar;
