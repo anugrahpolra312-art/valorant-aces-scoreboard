@@ -13,9 +13,7 @@ const Navbar = () => {
         </div>
         
         <div className="hidden md:flex items-center gap-8">
-          <a href="#" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-            Leaderboard
-          </a>
+          <a href="#" className="text-sm transition-colors text-primary-foreground font-bold">SILVER OAK UNIVERSITY</a>
           
           
           
