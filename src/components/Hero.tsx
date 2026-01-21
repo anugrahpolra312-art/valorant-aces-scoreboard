@@ -19,7 +19,8 @@ const Hero = () => {
           </span>
         </h1>
         
-        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6 flex items-center justify-center gap-3">Tournament Leaderboard<Swords className="w-8 h-8 text-primary" />
+        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6 flex items-center justify-center gap-3">
+          <Swords className="w-8 h-8 text-primary" />
           Tournament Leaderboard
           <Swords className="w-8 h-8 text-primary transform scale-x-[-1]" />
         </h2>
