@@ -8,8 +8,9 @@ const Hero = () => {
       
       {/* Content */}
       <div className="relative z-10 max-w-4xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/30 text-primary text-sm font-medium mb-6 backdrop-blur-sm">CYBER CLUTCH 4.0<Trophy className="w-4 h-4" />
-          VCT Champions 2024
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/30 text-primary text-sm font-medium mb-6 backdrop-blur-sm">
+          <Trophy className="w-4 h-4" />
+          CYBER CLUTCH 4.0
         </div>
         
         <h1 className="text-5xl md:text-7xl font-black mb-4 tracking-tight">
