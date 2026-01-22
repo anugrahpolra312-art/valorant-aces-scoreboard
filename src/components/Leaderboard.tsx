@@ -1,6 +1,9 @@
 import { Trophy, Skull, Target, Award } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Player {
+  id: string;
   rank: number;
   name: string;
   team: string;
@@ -11,19 +14,6 @@ interface Player {
   avatar: string;
 }
 
-const players: Player[] = [
-  { rank: 1, name: "TenZ", team: "SEN", kills: 287, deaths: 142, wins: 18, points: 4850, avatar: "T" },
-  { rank: 2, name: "Demon1", team: "EG", kills: 265, deaths: 156, wins: 16, points: 4420, avatar: "D" },
-  { rank: 3, name: "Aspas", team: "LEV", kills: 251, deaths: 148, wins: 15, points: 4180, avatar: "A" },
-  { rank: 4, name: "Derke", team: "FNC", kills: 243, deaths: 161, wins: 14, points: 3920, avatar: "D" },
-  { rank: 5, name: "yay", team: "C9", kills: 238, deaths: 152, wins: 14, points: 3780, avatar: "Y" },
-  { rank: 6, name: "Chronicle", team: "FNC", kills: 229, deaths: 168, wins: 13, points: 3650, avatar: "C" },
-  { rank: 7, name: "Marved", team: "SEN", kills: 221, deaths: 174, wins: 12, points: 3480, avatar: "M" },
-  { rank: 8, name: "Less", team: "LOUD", kills: 215, deaths: 169, wins: 12, points: 3320, avatar: "L" },
-  { rank: 9, name: "Alfa", team: "KRU", kills: 208, deaths: 178, wins: 11, points: 3150, avatar: "A" },
-  { rank: 10, name: "Sayaplayer", team: "100T", kills: 201, deaths: 182, wins: 10, points: 2980, avatar: "S" },
-];
-
 const getRankStyle = (rank: number) => {
   if (rank === 1) return "bg-gradient-to-r from-yellow-500 to-amber-600 text-black";
   if (rank === 2) return "bg-gradient-to-r from-slate-300 to-slate-400 text-black";
@@ -32,6 +22,39 @@ const getRankStyle = (rank: number) => {
 };
 
 const Leaderboard = () => {
+  const { data: players = [], isLoading, error } = useQuery({
+    queryKey: ['players'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .order('rank', { ascending: true });
+      
+      if (error) throw error;
+      return data as Player[];
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-6xl mx-auto px-4">
+        <div className="overflow-hidden rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm shadow-glow p-8 text-center">
+          <p className="text-muted-foreground">Loading leaderboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full max-w-6xl mx-auto px-4">
+        <div className="overflow-hidden rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm shadow-glow p-8 text-center">
+          <p className="text-destructive">Error loading leaderboard</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-6xl mx-auto px-4">
       <div className="overflow-hidden rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm shadow-glow">
@@ -61,7 +84,7 @@ const Leaderboard = () => {
         <div className="divide-y divide-border/30">
           {players.map((player, index) => (
             <div
-              key={player.rank}
+              key={player.id}
               className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-accent/10 transition-all duration-300 group"
               style={{ animationDelay: `${index * 50}ms` }}
             >
