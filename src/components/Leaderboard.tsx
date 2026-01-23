@@ -1,9 +1,27 @@
-import { Trophy, Skull, Target, Award } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { Trophy, Skull, Target, Award, Pencil } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface Player {
   id: string;
+  rank: number;
+  name: string;
+  team: string;
+  kills: number;
+  deaths: number;
+  wins: number;
+  points: number;
+  avatar: string;
+}
+
+interface PlayerFormData {
   rank: number;
   name: string;
   team: string;
@@ -22,6 +40,16 @@ const getRankStyle = (rank: number) => {
 };
 
 const Leaderboard = () => {
+  const { isAdmin } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [formData, setFormData] = useState<PlayerFormData>({
+    rank: 1, name: '', team: '', kills: 0, deaths: 0, wins: 0, points: 0, avatar: 'P'
+  });
+
   const { data: players = [], isLoading, error } = useQuery({
     queryKey: ['players'],
     queryFn: async () => {
@@ -34,6 +62,44 @@ const Leaderboard = () => {
       return data as Player[];
     }
   });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: PlayerFormData }) => {
+      const { error } = await supabase.from('players').update(data).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+      toast({ title: 'Player updated successfully' });
+      setIsDialogOpen(false);
+      setEditingPlayer(null);
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Failed to update player', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  const openEditDialog = (player: Player) => {
+    setEditingPlayer(player);
+    setFormData({
+      rank: player.rank,
+      name: player.name,
+      team: player.team,
+      kills: player.kills,
+      deaths: player.deaths,
+      wins: player.wins,
+      points: player.points,
+      avatar: player.avatar,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingPlayer) {
+      updateMutation.mutate({ id: editingPlayer.id, data: formData });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -124,15 +190,134 @@ const Leaderboard = () => {
               </div>
 
               {/* Points */}
-              <div className="col-span-2 text-center">
+              <div className="col-span-2 text-center flex items-center justify-center gap-2">
                 <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   {player.points.toLocaleString()}
                 </span>
+                {isAdmin && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => openEditDialog(player)}
+                  >
+                    <Pencil className="w-4 h-4 text-muted-foreground hover:text-primary" />
+                  </Button>
+                )}
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Edit Dialog - Admin Only */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="bg-card border-border/50">
+          <DialogHeader>
+            <DialogTitle>Edit Player Details</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="rank">Rank</Label>
+                <Input
+                  id="rank"
+                  type="number"
+                  value={formData.rank}
+                  onChange={(e) => setFormData({ ...formData, rank: parseInt(e.target.value) || 0 })}
+                  className="bg-muted/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="avatar">Avatar</Label>
+                <Input
+                  id="avatar"
+                  value={formData.avatar}
+                  onChange={(e) => setFormData({ ...formData, avatar: e.target.value.slice(0, 2) })}
+                  className="bg-muted/50"
+                  maxLength={2}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Player Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="bg-muted/50"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="team">Team</Label>
+              <Input
+                id="team"
+                value={formData.team}
+                onChange={(e) => setFormData({ ...formData, team: e.target.value })}
+                className="bg-muted/50"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="kills">Kills</Label>
+                <Input
+                  id="kills"
+                  type="number"
+                  value={formData.kills}
+                  onChange={(e) => setFormData({ ...formData, kills: parseInt(e.target.value) || 0 })}
+                  className="bg-muted/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="deaths">Deaths</Label>
+                <Input
+                  id="deaths"
+                  type="number"
+                  value={formData.deaths}
+                  onChange={(e) => setFormData({ ...formData, deaths: parseInt(e.target.value) || 0 })}
+                  className="bg-muted/50"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="wins">Wins</Label>
+                <Input
+                  id="wins"
+                  type="number"
+                  value={formData.wins}
+                  onChange={(e) => setFormData({ ...formData, wins: parseInt(e.target.value) || 0 })}
+                  className="bg-muted/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="points">Points</Label>
+                <Input
+                  id="points"
+                  type="number"
+                  value={formData.points}
+                  onChange={(e) => setFormData({ ...formData, points: parseInt(e.target.value) || 0 })}
+                  className="bg-muted/50"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                className="bg-gradient-to-r from-primary to-primary/80"
+                disabled={updateMutation.isPending}
+              >
+                Update
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
